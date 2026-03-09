@@ -2,9 +2,6 @@ const stateSelect = document.getElementById('stateSelect');
 const nextHolidayCard = document.getElementById('nextHolidayCard');
 const holidayList = document.getElementById('holidayList');
 const listTitle = document.getElementById('listTitle');
-const bridgeToggle = document.getElementById('bridgeToggle');
-const bridgeWrap = document.getElementById('bridgeWrap');
-const bridgeList = document.getElementById('bridgeList');
 
 const STATE_NAMES = {
   NRW: 'Nordrhein-Westfalen',
@@ -128,7 +125,7 @@ function render() {
   const holidays = getHolidays(state, year);
   const next = findNextHoliday(state);
 
-  listTitle.textContent = `Feiertage ${year} – ${STATE_NAMES[state]}`;
+  listTitle.textContent = `Brückentage & Feiertage ${year} – ${STATE_NAMES[state]}`;
 
   nextHolidayCard.innerHTML = `
     <h2>Nächster Feiertag</h2>
@@ -137,7 +134,29 @@ function render() {
     <div class="count">${daysUntil(next.date)} Tage</div>
   `;
 
-  holidayList.innerHTML = holidays
+  const bridges = getBridgeDays(holidays);
+
+  const bridgeHtml = bridges
+    .map((b) => {
+      const d = daysUntil(b.date);
+      let right = `${d} Tage`;
+      if (d < 0) right = `vor ${Math.abs(d)} Tagen`;
+      if (d === 0) right = 'Heute';
+
+      return `
+        <li class="holiday-item bridge">
+          <div class="left">
+            <span class="tag">Brückentag</span>
+            <strong>${formatDate(b.date)}</strong>
+            <span>${b.reason}</span>
+          </div>
+          <div class="right">${right}</div>
+        </li>
+      `;
+    })
+    .join('');
+
+  const holidayHtml = holidays
     .map((h) => {
       const d = daysUntil(h.date);
       let right = `${d} Tage`;
@@ -156,29 +175,8 @@ function render() {
     })
     .join('');
 
-  const bridges = getBridgeDays(holidays);
-  if (bridgeToggle.checked) {
-    bridgeWrap.classList.remove('hidden');
-    bridgeList.innerHTML = bridges
-      .map((b) => `
-        <li class="holiday-item">
-          <div class="left">
-            <strong>Brückentag</strong>
-            <span>${formatDate(b.date)} · ${b.reason}</span>
-          </div>
-          <div class="right">${daysUntil(b.date)} Tage</div>
-        </li>
-      `)
-      .join('');
-
-    if (bridges.length === 0) {
-      bridgeList.innerHTML = '<li class="holiday-item"><div class="left"><strong>Keine Brückentage gefunden</strong><span>Für die aktuelle Regelmenge gibt es dieses Jahr keine Treffer.</span></div></li>';
-    }
-  } else {
-    bridgeWrap.classList.add('hidden');
-  }
+  holidayList.innerHTML = bridgeHtml + holidayHtml;
 }
 
 stateSelect.addEventListener('change', render);
-bridgeToggle.addEventListener('change', render);
 render();
