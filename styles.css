@@ -90,6 +90,14 @@ select {
 
 .list-wrap h2 { margin: 0; }
 
+.bridge-toggle {
+  color: var(--muted);
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .holiday-item.bridge {
   border-color: #b9d7ff;
   background: #f1f7ff;
