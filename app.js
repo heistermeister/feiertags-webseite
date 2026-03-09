@@ -2,6 +2,7 @@ const stateSelect = document.getElementById('stateSelect');
 const nextHolidayCard = document.getElementById('nextHolidayCard');
 const holidayList = document.getElementById('holidayList');
 const listTitle = document.getElementById('listTitle');
+const bridgeToggle = document.getElementById('bridgeToggle');
 
 const STATE_NAMES = {
   NRW: 'Nordrhein-Westfalen',
@@ -87,6 +88,38 @@ function findNextHoliday(state) {
   return getHolidays(state, year + 1)[0];
 }
 
+function getBridgeDays(holidays) {
+  const result = [];
+  const known = new Set(holidays.map((h) => atMidnight(h.date).getTime()));
+
+  for (const h of holidays) {
+    const day = h.date.getDay(); // 0=So,1=Mo,...6=Sa
+
+    // Feiertag am Dienstag -> Montag als möglicher Brückentag
+    if (day === 2) {
+      const bridge = addDays(h.date, -1);
+      if (!known.has(atMidnight(bridge).getTime())) {
+        result.push({ date: bridge, reason: `zwischen Wochenende und ${h.name}` });
+      }
+    }
+
+    // Feiertag am Donnerstag -> Freitag als möglicher Brückentag
+    if (day === 4) {
+      const bridge = addDays(h.date, 1);
+      if (!known.has(atMidnight(bridge).getTime())) {
+        result.push({ date: bridge, reason: `zwischen ${h.name} und Wochenende` });
+      }
+    }
+  }
+
+  const unique = new Map();
+  for (const item of result) {
+    unique.set(atMidnight(item.date).getTime(), item);
+  }
+
+  return [...unique.values()].sort((a, b) => a.date - b.date);
+}
+
 function render() {
   const state = stateSelect.value;
   const year = new Date().getFullYear();
@@ -102,18 +135,38 @@ function render() {
     <div class="count">${daysUntil(next.date)} Tage</div>
   `;
 
-  holidayList.innerHTML = holidays
-    .map((h) => {
-      const d = daysUntil(h.date);
+  const bridges = getBridgeDays(holidays).map((b) => ({ ...b, isBridge: true }));
+  const items = holidays.map((h) => ({ ...h, isBridge: false }));
+
+  const merged = bridgeToggle.checked
+    ? [...items, ...bridges].sort((a, b) => a.date - b.date)
+    : items;
+
+  holidayList.innerHTML = merged
+    .map((item) => {
+      const d = daysUntil(item.date);
       let right = `${d} Tage`;
       if (d < 0) right = `vor ${Math.abs(d)} Tagen`;
       if (d === 0) right = 'Heute';
 
+      if (item.isBridge) {
+        return `
+          <li class="holiday-item bridge">
+            <div class="left">
+              <span class="tag">Brückentag</span>
+              <strong>${formatDate(item.date)}</strong>
+              <span>${item.reason}</span>
+            </div>
+            <div class="right">${right}</div>
+          </li>
+        `;
+      }
+
       return `
         <li class="holiday-item">
           <div class="left">
-            <strong>${h.name}</strong>
-            <span>${formatDate(h.date)}</span>
+            <strong>${item.name}</strong>
+            <span>${formatDate(item.date)}</span>
           </div>
           <div class="right">${right}</div>
         </li>
@@ -123,4 +176,5 @@ function render() {
 }
 
 stateSelect.addEventListener('change', render);
+bridgeToggle.addEventListener('change', render);
 render();
