@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feiertage NRW & Niedersachsen</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="topbar">
+        <div>
+          <h1>Feiertage</h1>
+          <p class="subtitle">NRW oder Niedersachsen mit Countdown</p>
+        </div>
+        <label class="state-picker" for="stateSelect">
+          Bundesland
+          <select id="stateSelect">
+            <option value="NRW">Nordrhein-Westfalen</option>
+            <option value="NDS">Niedersachsen</option>
+          </select>
+        </label>
+      </header>
+
+      <section id="nextHolidayCard" class="next-holiday-card"></section>
+
+      <section class="list-wrap">
+        <h2 id="listTitle"></h2>
+        <ul id="holidayList" class="holiday-list"></ul>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
